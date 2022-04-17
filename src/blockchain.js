@@ -65,19 +65,35 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
+            block.time = new Date().getTime().toString().slice(0,-3);
+            block.hash = SHA256(JSON.stringify(block.body)).toString();
+ 
            if (self.chain.length > 0) {
-               let lastBlockhash = self.hash;
-               block.previousBlockHash = lastBlockhash;
-               block.height = self.chain.length;
-           } 
+                let lastBlockhash = self.chain[self.height].hash;
+                block.previousBlockHash = lastBlockhash;
+                block.height = self.chain.length;
+                self.chain.push(block);
 
-           block.time = new Date().getTime().toString().slice(0,-3);
-           block.hash = SHA256(JSON.stringify(block)).toString();
-           
-           self.chain.push(block);
+                let isChainValid = await this.validateChain();
+                if (!isChainValid) {
+                    reject('Chain is invalid. Block was not added');
+                    return;
+                }
 
-           resolve(block);
-           reject(`Unexpected error: block creation ${JSON.stringify(block)}`)
+                let isBlockValid = await block.validate();
+                if (isBlockValid) {
+                    resolve(block);
+                    return;
+                }
+                else {
+                    reject(`Error on block adding. Block is invalid.`);
+                }
+           }
+
+            self.height++;
+            self.chain.push(block);
+            resolve(block);
+            reject(`Unexpected error: block creation ${JSON.stringify(block)}`)
         });
     }
 
@@ -204,7 +220,7 @@ class Blockchain {
      * 1. You should validate each block using `validateBlock`
      * 2. Each Block should check the with the previousBlockHash
      */
-    validateChain() {
+    async validateChain() {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
