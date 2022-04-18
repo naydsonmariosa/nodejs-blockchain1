@@ -69,7 +69,7 @@ class Blockchain {
             block.hash = SHA256(JSON.stringify(block.body)).toString();
  
            if (self.chain.length > 0) {
-                let lastBlockhash = self.chain[self.height].hash;
+                let lastBlockhash = self.chain[self.chain.length - 1].hash;
                 block.previousBlockHash = lastBlockhash;
                 block.height = self.chain.length;
                 self.chain.push(block);
@@ -148,6 +148,8 @@ class Blockchain {
                     let block = new BlockClass.Block({address, signature, message, star});
                     let blockAdded = await this._addBlock(block);
                     resolve(blockAdded);
+                } else {
+                    reject('Invalid message verification. Invalid message, address or signature params');
                 }
             } catch(error) {
                 reject(`Error on submit star. Message: ${error}`);
@@ -232,6 +234,10 @@ class Blockchain {
             resolve(errorLog);
             reject('Error on validateChain()')
         });
+    }
+
+    getChain() {
+        return this.chain;
     }
 
 }
