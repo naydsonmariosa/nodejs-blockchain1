@@ -86,7 +86,7 @@ class Blockchain {
                     return;
                 }
                 else {
-                    reject(`Error on block adding. Block is invalid.`);
+                    reject(`Error on add block. Block's data corruption.`);
                 }
            }
 

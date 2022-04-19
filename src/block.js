@@ -40,6 +40,7 @@ class Block {
         return new Promise((resolve, reject) => {
             // Save in auxiliary variable the current block hash
             let currentBlockHash = self.hash;
+            self.hash = null;
             console.log(`CURRENT: ${currentBlockHash}`);
                                             
             // Recalculate the hash of the Block
@@ -47,8 +48,14 @@ class Block {
             console.log(`RECALC: ${hashRecalc}`);
             
             // Comparing if the hashes changed
-            resolve(hashRecalc === currentBlockHash);
-            reject('Unexpected error');
+            if (hashRecalc === currentBlockHash) {
+                self.hash = hashRecalc;
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+
+            reject(`Unexpected error on addBlock`);
         });
     }
 
