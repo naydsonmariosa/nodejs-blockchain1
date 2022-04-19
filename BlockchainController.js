@@ -121,8 +121,8 @@ class BlockchainController {
         this.app.get("/validate", async(req, res) => {
             try {
                 let errorLog = await this.blockchain.validateChain();
-                return errorLog.length == 0 ? res.status(200).send('Valid chain').json()
-                    : res.status(500).send(`Invalid Chain: ${errorLog.toString()}`).json();
+                return errorLog.length == 0 ? res.status(200).send(errorLog).json()
+                    : res.status(500).send(errorLog.toString()).json();
             } catch(error) {
                 return res.status(500).send(`Error: ${error.message}`);
             }
