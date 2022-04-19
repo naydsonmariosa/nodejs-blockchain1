@@ -66,30 +66,33 @@ class Blockchain {
         let self = this;
         return new Promise(async (resolve, reject) => {
             block.time = new Date().getTime().toString().slice(0,-3);
-            block.hash = SHA256(JSON.stringify(block.body)).toString();
- 
-           if (self.chain.length > 0) {
+           
+            if (self.chain.length > 0) { //it's not genesis block
                 let lastBlockhash = self.chain[self.chain.length - 1].hash;
                 block.previousBlockHash = lastBlockhash;
                 block.height = self.chain.length;
-                self.chain.push(block);
-
-                let isChainValid = await this.validateChain();
-                if (!isChainValid) {
-                    reject('Chain is invalid. Block was not added');
-                    return;
-                }
+                block.hash = SHA256(JSON.stringify(block)).toString();
 
                 let isBlockValid = await block.validate();
                 if (isBlockValid) {
+                    self.chain.push(block);
+
+                    let isChainValid = await this.validateChain();
+                    if (!isChainValid) {
+                        self.chain.pop();
+                        reject('Chain is invalid. Block was not added');
+                        return;
+                    }
                     resolve(block);
                     return;
                 }
                 else {
-                    reject(`Error on add block. Block's data .`);
+                    reject(`Error on add block. Block's data corruption.`);
+                    return;
                 }
            }
 
+            block.hash = SHA256(JSON.stringify(block)).toString();
             self.height++;
             self.chain.push(block);
             resolve(block);
@@ -141,6 +144,7 @@ class Blockchain {
 
             if (minutesDifference > 5) {
                 reject('Error submitStar(), Elapsed time...');
+                return;
             }
 
             try {
@@ -150,6 +154,7 @@ class Blockchain {
                     resolve(blockAdded);
                 } else {
                     reject('Invalid message verification. Invalid message, address or signature params');
+                    return;
                 }
             } catch(error) {
                 reject(`Error on submit star. Message: ${error}`);
